@@ -1,5 +1,5 @@
 ### Pup Chat
-A simple chat applicase built with React and Meteor.
+A simple chat application built with React and Meteor.
 
 Base on pup boilplate [Read the Documentation](http://cleverbeagle.com/pup)
 
