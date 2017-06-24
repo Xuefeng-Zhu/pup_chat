@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { Meteor } from 'meteor/meteor';
 import { Bert } from 'meteor/themeteorchef:bert';
-import OAuthLoginButtons from '../../components/OAuthLoginButtons/OAuthLoginButtons';
 import AccountPageFooter from '../../components/AccountPageFooter/AccountPageFooter';
 import validate from '../../../modules/validate';
 
@@ -48,7 +47,7 @@ class Login extends React.Component {
         Bert.alert(error.reason, 'danger');
       } else {
         Bert.alert('Welcome back!', 'success');
-        history.push('/documents');
+        history.push('/chats');
       }
     });
   }

@@ -3,11 +3,16 @@ import { check } from 'meteor/check';
 import Chats from '../Chats';
 
 Meteor.publish('chats', function chats() {
-  return Chats.find({ owner: this.userId });
+  const user = Meteor.users.findOne(this.userId);
+  return Chats.find({ members: user.emails[0].address });
 });
 
 // Note: chats.view is also used when editing an existing document.
 Meteor.publish('chats.view', function chatsView(documentId) {
   check(documentId, String);
-  return Chats.find({ _id: documentId, owner: this.userId });
+  const user = Meteor.users.findOne(this.userId);
+  return Chats.find({
+    _id: documentId,
+    members: user.emails[0].address
+  });
 });

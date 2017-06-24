@@ -5,10 +5,10 @@ import Chats from './Chats';
 import rateLimit from '../../modules/rate-limit';
 
 Meteor.methods({
-  'groups.insert': function groupsInsert(doc) {
+  'chats.insert': function chatsInsert(doc) {
     check(doc, {
       title: String,
-      member: [SimpleSchema.RegEx.Email],
+      members: [String],
     });
 
     try {
@@ -17,26 +17,52 @@ Meteor.methods({
       throw new Meteor.Error('500', exception);
     }
   },
-  'groups.update': function groupsUpdate(doc) {
+  'chats.update': function chatsUpdate(doc) {
     check(doc, {
       _id: String,
       title: String,
-      member: [SimpleSchema.RegEx.Email],
+      members: [String],
     });
 
     try {
-      const groupId = doc._id;
-      Chats.update(groupId, { $set: doc });
-      return groupId; // Return _id so we can redirect to document after update.
+      const chatId = doc._id;
+      const chat = Chats.findOne(chatId);
+      if (chat.owner !== this.userId) {
+        throw new Meteor.Error('500', 'You are not the owner of the chat');
+      }
+
+      Chats.update(chatId, { $set: doc });
+      return chatId; // Return _id so we can redirect to document after update.
     } catch (exception) {
       throw new Meteor.Error('500', exception);
     }
   },
-  'groups.remove': function groupsRemove(groupId) {
-    check(groupId, String);
+  'chats.remove': function chatsRemove(chatId) {
+    check(chatId, String);
 
     try {
-      return Chats.remove(groupId);
+      const chat = Chats.findOne(chatId);
+      if (chat.owner !== this.userId) {
+        throw new Meteor.Error('500', 'You are not the owner of the chat');
+      }
+
+      return Chats.remove(chatId);
+    } catch (exception) {
+      throw new Meteor.Error('500', exception);
+    }
+  },
+  'chats.leave': function chatsLeave(chatId) {
+    check(chatId, String);
+
+    try {
+      const user = Meteor.user();
+
+      Chats.update(chatId, {
+        $pull: {
+          members: user.emails[0].address,
+        },
+      });
+      return chatId;
     } catch (exception) {
       throw new Meteor.Error('500', exception);
     }
@@ -45,9 +71,9 @@ Meteor.methods({
 
 rateLimit({
   methods: [
-    'groups.insert',
-    'groups.update',
-    'groups.remove',
+    'chats.insert',
+    'chats.update',
+    'chats.remove',
   ],
   limit: 5,
   timeRange: 1000,

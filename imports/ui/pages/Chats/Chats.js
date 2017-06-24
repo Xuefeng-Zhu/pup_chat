@@ -1,82 +1,108 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import { Table, Alert, Button } from 'react-bootstrap';
+import { Table, Alert, ButtonToolbar, Button, OverlayTrigger,
+         Popover, ListGroup, ListGroupItem, Glyphicon } from 'react-bootstrap';
 import { timeago, monthDayYearAtTime } from '@cleverbeagle/dates';
 import { Meteor } from 'meteor/meteor';
 import { createContainer } from 'meteor/react-meteor-data';
 import { Bert } from 'meteor/themeteorchef:bert';
-import GroupsCollection from '../../../api/Groups/Groups';
+import ChatsCollection from '../../../api/Chats/Chats';
 import Loading from '../../components/Loading/Loading';
 
-import './Groups.scss';
+import './Chats.scss';
 
-const handleRemove = (documentId) => {
-  if (confirm('Are you sure? This is permanent!')) {
-    Meteor.call('documents.remove', documentId, (error) => {
+const handleRemove = (documentId, owner, user) => {
+  const isOwner = owner === user._id;
+  const confirmMessage = isOwner ? 'Are you sure to delete the chat' :
+    'Are you sure to leave the chat?';
+  const method = isOwner ? 'chats.remove' : 'chats.leave';
+  const successMessage = isOwner ? 'Chat deleted!' : 'Left chat!';
+
+  if (confirm(confirmMessage)) {
+    Meteor.call(method, documentId, (error) => {
       if (error) {
         Bert.alert(error.reason, 'danger');
       } else {
-        Bert.alert('Document deleted!', 'success');
+        Bert.alert(successMessage, 'success');
       }
     });
   }
 };
 
-const Groups = ({ loading, documents, match, history }) => (!loading ? (
-  <div className="Groups">
+const renderTableRow = ({ _id, owner, title, members, updatedAt }, match, history, user) => {
+  const tooltip = (
+    <Popover id="{_id}+popover">
+      <ListGroup>
+        {members.map(member => (
+          <ListGroupItem key={member}>{member}</ListGroupItem>
+        ))}
+      </ListGroup>
+    </Popover>);
+
+  return (
+    <tr key={_id}>
+      <td>{title}</td>
+      <td>
+        <OverlayTrigger placement="bottom" overlay={tooltip}>
+          <p>{members[0] + ' ...'}</p>
+        </OverlayTrigger>
+      </td>
+      <td>{timeago(updatedAt)}</td>
+      <td>
+        <ButtonToolbar>
+          <Button
+            bsStyle="primary"
+            onClick={() => history.push(`${match.url}/${_id}`)}
+          >
+            <Glyphicon glyph="eye-open" />
+          </Button>
+          <Button
+            bsStyle="danger"
+            onClick={() => handleRemove(_id, owner, user)}
+          >
+            <Glyphicon glyph="trash" />
+          </Button>
+        </ButtonToolbar>
+      </td>
+    </tr>);
+}
+
+const Chats = ({ loading, chats, match, history, user }) => (!loading ? (
+  <div className="Chats">
     <div className="page-header clearfix">
-      <h4 className="pull-left">Groups</h4>
-      <Link className="btn btn-success pull-right" to={`${match.url}/new`}>Add Document</Link>
+      <h4 className="pull-left">Chats</h4>
+      <Link className="btn btn-success pull-right" to={`${match.url}/new`}>Create new Chat</Link>
     </div>
-    {documents.length ? <Table responsive>
+    {chats.length ? <Table responsive>
       <thead>
         <tr>
           <th>Title</th>
-          <th>Last Updated</th>
+          <th>Members</th>
           <th>Created</th>
-          <th />
           <th />
         </tr>
       </thead>
       <tbody>
-        {documents.map(({ _id, title, createdAt, updatedAt }) => (
-          <tr key={_id}>
-            <td>{title}</td>
-            <td>{timeago(updatedAt)}</td>
-            <td>{monthDayYearAtTime(createdAt)}</td>
-            <td>
-              <Button
-                bsStyle="primary"
-                onClick={() => history.push(`${match.url}/${_id}`)}
-                block
-              >View</Button>
-            </td>
-            <td>
-              <Button
-                bsStyle="danger"
-                onClick={() => handleRemove(_id)}
-                block
-              >Delete</Button>
-            </td>
-          </tr>
-        ))}
+        {chats.map(chat => renderTableRow(chat, match, history, user))}
       </tbody>
-    </Table> : <Alert bsStyle="warning">No documents yet!</Alert>}
+    </Table> : <Alert bsStyle="warning">No chats yet!</Alert>}
   </div>
 ) : <Loading />);
 
-Groups.propTypes = {
+Chats.propTypes = {
   loading: PropTypes.bool.isRequired,
-  groups: PropTypes.arrayOf(PropTypes.object).isRequired,
+  chats: PropTypes.arrayOf(PropTypes.object).isRequired,
   match: PropTypes.object.isRequired,
   history: PropTypes.object.isRequired,
+  user: PropTypes.object,
 };
 
 export default createContainer(() => {
-  const subscription = Meteor.subscribe('groups');
+  const subscription = Meteor.subscribe('chats');
   return {
     loading: !subscription.ready(),
-    groups: GroupsCollection.find().fetch(),
+    chats: ChatsCollection.find().fetch(),
+    user: Meteor.user(),
   };
-}, Groups);
+}, Chats);
