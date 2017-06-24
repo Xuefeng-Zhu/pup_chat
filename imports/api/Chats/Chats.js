@@ -45,8 +45,8 @@ Chats.schema = new SimpleSchema({
     label: 'The members of the group.',
   },
   'members.$': {
-    type: SimpleSchema.RegEx.Email
-  }
+    type: SimpleSchema.RegEx.Email,
+  },
 });
 
 Chats.attachSchema(Chats.schema);

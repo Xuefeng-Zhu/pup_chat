@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { Table, Alert, ButtonToolbar, Button, OverlayTrigger,
          Popover, ListGroup, ListGroupItem, Glyphicon } from 'react-bootstrap';
-import { timeago, monthDayYearAtTime } from '@cleverbeagle/dates';
+import { timeago } from '@cleverbeagle/dates';
 import { Meteor } from 'meteor/meteor';
 import { createContainer } from 'meteor/react-meteor-data';
 import { Bert } from 'meteor/themeteorchef:bert';
@@ -12,15 +12,14 @@ import Loading from '../../components/Loading/Loading';
 
 import './Chats.scss';
 
-const handleRemove = (documentId, owner, user) => {
-  const isOwner = owner === user._id;
+const handleRemove = (chatId, isOwner) => {
   const confirmMessage = isOwner ? 'Are you sure to delete the chat' :
     'Are you sure to leave the chat?';
   const method = isOwner ? 'chats.remove' : 'chats.leave';
   const successMessage = isOwner ? 'Chat deleted!' : 'Left chat!';
 
   if (confirm(confirmMessage)) {
-    Meteor.call(method, documentId, (error) => {
+    Meteor.call(method, chatId, (error) => {
       if (error) {
         Bert.alert(error.reason, 'danger');
       } else {
@@ -40,12 +39,13 @@ const renderTableRow = ({ _id, owner, title, members, updatedAt }, match, histor
       </ListGroup>
     </Popover>);
 
+  const isOwner = owner === user._id;
   return (
     <tr key={_id}>
       <td>{title}</td>
       <td>
         <OverlayTrigger placement="bottom" overlay={tooltip}>
-          <p>{members[0] + ' ...'}</p>
+          <p>{`${members[0]}...`}</p>
         </OverlayTrigger>
       </td>
       <td>{timeago(updatedAt)}</td>
@@ -55,13 +55,13 @@ const renderTableRow = ({ _id, owner, title, members, updatedAt }, match, histor
             bsStyle="primary"
             onClick={() => history.push(`${match.url}/${_id}`)}
           >
-            <Glyphicon glyph="eye-open" />
+            <Glyphicon glyph="comment" />
           </Button>
           <Button
             bsStyle="danger"
-            onClick={() => handleRemove(_id, owner, user)}
+            onClick={() => handleRemove(_id, isOwner)}
           >
-            <Glyphicon glyph="trash" />
+            <Glyphicon glyph={isOwner ? 'trash' : 'log-out'} />
           </Button>
         </ButtonToolbar>
       </td>

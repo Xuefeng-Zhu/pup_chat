@@ -1,5 +1,4 @@
 import { Meteor } from 'meteor/meteor';
-import SimpleSchema from 'simpl-schema';
 import { check } from 'meteor/check';
 import Chats from './Chats';
 import rateLimit from '../../modules/rate-limit';
