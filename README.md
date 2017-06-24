@@ -1,8 +1,11 @@
-### Pup
-A boilerplate for products.
+### Pup Chat
+A simple chat applicase built with React and Meteor.
 
-[Read the Documentation](http://cleverbeagle.com/pup)
+Base on pup boilplate [Read the Documentation](http://cleverbeagle.com/pup)
 
----
+### Get Started
 
-Need help and want to stay accountable building your product? [Check out Clever Beagle](http://cleverbeagle.com).
+```
+npm install
+npm start
+```
