@@ -130,7 +130,7 @@ class ChatEditor extends React.Component {
       <FormGroup>
         <ControlLabel>Members</ControlLabel>
         <MultiSelect
-          placeholder='Enter member email here'
+          placeholder="Enter member email here"
           onInput={_.noop}
           onSelect={this.handleSelect}
           onRemove={this.handleRemove}
